@@ -39,23 +39,30 @@ public class AuthResource {
         // Validar con la base de datos usando el servicio
         Usuario u = usuarioService.auntentica(user, password);
         if (u == null) {
-            //Excepcion de autenticacion
+            // Excepcion de autenticacion
             throw new WebApplicationException(Response.status(401).build());
         }
-
+        // si el usuario no tiene asignado un rol, se le asigna el rol "user" por defecto
         String role = u.rol != null ? u.rol : "user";
-
+        // Solo los usuarios con rol "admin" pueden generar tokens, si el rol del usuario no es "admin", se lanza una excepcion de autorizacion
+        if (!"admin".equalsIgnoreCase(u.rol)) {
+            throw new WebApplicationException(
+                    Response.status(Response.Status.FORBIDDEN)
+                            .entity("No autorizado: solo admin puede generar token")
+                            .build());
+        }
+        
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(ttl);
 
         String jwt = Jwt.issuer(issuer)
                 .subject(user)
-                .groups(Set.of(role))     // roles: user / admin
+                .groups(Set.of("admin")) // roles: user / admin
                 .issuedAt(now)
                 .expiresAt(exp)
                 .sign();
 
-        return new TokenResponse(jwt, exp.getEpochSecond(), role);
+        return new TokenResponse(jwt, exp.getEpochSecond(), "admin");
     }
 
     public static class TokenResponse {
@@ -63,7 +70,9 @@ public class AuthResource {
         public long expiresAt;
         public String role;
 
-        public TokenResponse() {}
+        public TokenResponse() {
+        }
+
         public TokenResponse(String accessToken, long expiresAt, String role) {
             this.accessToken = accessToken;
             this.expiresAt = expiresAt;
