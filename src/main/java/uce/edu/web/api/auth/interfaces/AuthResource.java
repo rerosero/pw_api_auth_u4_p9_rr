@@ -57,12 +57,12 @@ public class AuthResource {
 
         String jwt = Jwt.issuer(issuer)
                 .subject(user)
-                .groups(Set.of("admin")) // roles: user / admin
+                .groups(Set.of(role)) // roles: user / admin
                 .issuedAt(now)
                 .expiresAt(exp)
                 .sign();
 
-        return new TokenResponse(jwt, exp.getEpochSecond(), "admin");
+        return new TokenResponse(jwt, exp.getEpochSecond(), role);
     }
 
     public static class TokenResponse {
