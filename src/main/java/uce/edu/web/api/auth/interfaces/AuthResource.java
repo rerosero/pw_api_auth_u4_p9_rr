@@ -34,7 +34,8 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     public TokenResponse token(
             @QueryParam("user") String user,
-            @QueryParam("password") String password) {
+            @QueryParam("password") String password) 
+            {
 
         // Validar con la base de datos usando el servicio
         Usuario u = usuarioService.auntentica(user, password);
