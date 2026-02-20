@@ -36,7 +36,7 @@ public class AuthResource {
             @QueryParam("user") String user,
             @QueryParam("password") String password) {
 
-        // Validar con la base de datos usando el servicio
+        // Validar con la base de datos (usando el servicio)
         Usuario u = usuarioService.auntentica(user, password);
         if (u == null) {
             // Excepcion de autenticacion
