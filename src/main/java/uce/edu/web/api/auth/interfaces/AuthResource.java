@@ -34,8 +34,8 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     public TokenResponse token(
             @QueryParam("user") String user,
-            @QueryParam("password") String password) 
-            {
+            @QueryParam("password") String password,
+            @QueryParam("rol") String rol) {
 
         // Validar con la base de datos usando el servicio
         Usuario u = usuarioService.auntentica(user, password);
@@ -43,27 +43,32 @@ public class AuthResource {
             // Excepcion de autenticacion
             throw new WebApplicationException(Response.status(401).build());
         }
-        // si el usuario no tiene asignado un rol, se le asigna el rol "user" por defecto
-        String role = u.rol != null ? u.rol : "user";
-        // Solo los usuarios con rol "admin" pueden generar tokens, si el rol del usuario no es "admin", se lanza una excepcion de autorizacion
-        if (!"admin".equalsIgnoreCase(u.rol)) {
+        // si el usuario no tiene asignado un rol, se le asigna el rol "user" por
+        // defecto
+        rol = u.rol != null ? u.rol : "user";
+        if (rol == null || rol.isEmpty()) {
+            rol = "user";
+        }
+        // Solo los usuarios con rol "admin" pueden generar tokens, si el rol del
+        // usuario no es "admin", se lanza una excepcion de autorizacion
+        if (!"admin".equalsIgnoreCase(rol)) {
             throw new WebApplicationException(
                     Response.status(Response.Status.FORBIDDEN)
                             .entity("No autorizado: solo admin puede generar token")
                             .build());
         }
-        
+
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(ttl);
 
         String jwt = Jwt.issuer(issuer)
                 .subject(user)
-                .groups(Set.of(role)) // roles: user / admin
+                .groups(Set.of(rol)) // roles: user / admin
                 .issuedAt(now)
                 .expiresAt(exp)
                 .sign();
 
-        return new TokenResponse(jwt, exp.getEpochSecond(), role);
+        return new TokenResponse(jwt, exp.getEpochSecond(), rol);
     }
 
     public static class TokenResponse {
